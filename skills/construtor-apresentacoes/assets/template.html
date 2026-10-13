@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITULO_DA_APRESENTACAO}}</title>
+
+<!--
+  BOILERPLATE DO CONSTRUTOR DE APRESENTAÇÕES
+  - Troque fontes e tokens do :root se o usuário enviou outro design.
+  - Coloque os slides dentro de <main class="deck">, um <section class="slide"> por slide.
+  - Contador (NN / TOTAL), pontos de navegação e animações são gerados pelo script no fim.
+    Você pode deixar <div class="slide-counter"></div> vazio: o JS preenche.
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============ TOKENS ============ */
+:root {
+  --bg: #1C1B20;
+  --bg-soft: #23222A;
+  --surface: #2A2933;
+  --surface-2: #312F3D;
+  --text: #F5F7FB;
+  --text-soft: #B8BCC8;
+  --line: rgba(255,255,255,0.10);
+
+  --accent: #28C2C4;
+  --accent-2: #B0AFFA;
+  --accent-3: #7BE7E8;
+
+  --success: #6EE7B7;
+  --warning: #F6C177;
+  --danger: #FF7B9C;
+
+  /* superfícies — troque estes para temas claros ou de marca */
+  --slide-bg:
+    radial-gradient(circle at 20% 20%, rgba(176,175,250,0.10), transparent 30%),
+    radial-gradient(circle at 80% 30%, rgba(40,194,196,0.10), transparent 28%),
+    linear-gradient(180deg, #1C1B20 0%, #17161B 100%);
+  --grid-line: rgba(255,255,255,.025);
+  --card-bg: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  --card-border: rgba(255,255,255,0.08);
+  --on-accent: #0E1113;
+
+  --shadow-soft: 0 10px 30px rgba(0,0,0,0.25);
+  --shadow-glow: 0 0 0 1px rgba(40,194,196,0.16), 0 0 32px rgba(40,194,196,0.12);
+
+  --font-display: 'Chakra Petch', system-ui, sans-serif;
+  --font-body: 'Chakra Petch', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --fs-display: clamp(56px, 7vw, 96px);
+  --fs-h1: clamp(40px, 5vw, 72px);
+  --fs-h2: clamp(28px, 3.6vw, 48px);
+  --fs-h3: clamp(20px, 2vw, 28px);
+  --fs-body-lg: clamp(18px, 1.5vw, 24px);
+  --fs-body: clamp(16px, 1.3vw, 20px);
+  --fs-small: 14px;
+  --fs-mono: 13px;
+
+  --r-sm: 12px;
+  --r-card: 22px;
+  --r-frame: 26px;
+
+  --pad-y: clamp(32px, 6vh, 56px);
+  --pad-x: clamp(24px, 5vw, 64px);
+
+  --ease: cubic-bezier(.2,.7,.2,1);
+}
+
+/* ============ BASE ============ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+.mono { font-family: var(--font-mono); font-size: var(--fs-mono); letter-spacing: .08em; text-transform: uppercase; }
+
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.05; letter-spacing: -0.01em; text-wrap: balance; }
+h1 { font-size: var(--fs-h1); }
+h2 { font-size: var(--fs-h2); }
+h3 { font-size: var(--fs-h3); font-weight: 600; line-height: 1.2; }
+p  { color: var(--text-soft); }
+
+.hl  { color: var(--accent); }
+.hl-2 { color: var(--accent-2); }
+.hl-glow { color: var(--accent); text-shadow: 0 0 24px rgba(40,194,196,.35); }
+
+/* ============ DECK + SCROLL-SNAP ============ */
+.deck {
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+.deck::-webkit-scrollbar { display: none; }
+
+.slide {
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow: hidden;           /* nunca rolagem interna */
+  background: var(--slide-bg);
+}
+/* grade discreta */
+.slide::before {
+  content: "";
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+  pointer-events: none;
+}
+
+.slide-inner {
+  position: relative;
+  height: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--pad-y) var(--pad-x);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(20px, 4vh, 40px);
+}
+
+.slide-counter {
+  position: absolute;
+  top: var(--pad-y);
+  right: var(--pad-x);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  letter-spacing: .12em;
+  color: var(--text-soft);
+  opacity: .7;
+}
+
+/* decoração de marca: posicione dentro do .slide, fora do .slide-inner */
+.deco { position: absolute; pointer-events: none; z-index: 0; }
+.slide-inner { z-index: 1; }
+
+/* ============ TIPOS COMUNS ============ */
+.eyebrow { color: var(--accent-2); margin-bottom: 14px; }
+.subtitle { font-size: var(--fs-body-lg); color: var(--text-soft); max-width: 46ch; margin-top: 20px; }
+.section-heading h2 { max-width: 28ch; }
+.section-heading.compact h2 { font-size: var(--fs-h3); }
+
+.hero-badge, .pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 999px;
+  border: 1px solid rgba(40,194,196,.35);
+  background: rgba(40,194,196,.08);
+  color: var(--accent);
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  margin-bottom: 18px;
+}
+
+/* Título */
+.title-slide .slide-inner, .quote-slide .slide-inner, .closing-slide .slide-inner, .divider-slide .slide-inner { align-items: center; text-align: center; }
+.title-slide h1 { font-size: var(--fs-display); max-width: 16ch; }
+.title-slide .subtitle, .closing-slide .subtitle, .divider-slide .subtitle { margin-left: auto; margin-right: auto; }
+
+/* Citação */
+.statement {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: clamp(32px, 4.6vw, 64px); line-height: 1.12;
+  max-width: 20ch;
+  text-wrap: balance;
+}
+.quote-meta { color: var(--accent-2); }
+
+/* Divisor */
+.divider-slide h2 { font-size: var(--fs-h1); }
+
+/* ============ CARDS / GRADES ============ */
+.card-grid, .feature-grid, .stats-grid { display: grid; gap: clamp(14px, 2vw, 24px); }
+.cols-2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+.cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.cols-4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
+
+.card, .feature-card, .stat-card, .faq-item, .comparison-col, .diagram-node {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-soft);
+  padding: clamp(18px, 2.4vw, 28px);
+}
+.card h3, .feature-card h3 { margin: 10px 0 8px; }
+.card-label { color: var(--accent); }
+.card--accent, .accent.comparison-col { border-color: rgba(40,194,196,0.30); box-shadow: var(--shadow-glow); }
+
+.feature-tag {
+  display: inline-block; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--accent-2); font-size: 11px;
+}
+
+/* Comparação */
+.comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(14px, 2vw, 24px); }
+.comparison-col h3 { margin-bottom: 14px; }
+.comparison-col ul { list-style: none; display: grid; gap: 10px; }
+.comparison-col li { position: relative; padding-left: 22px; color: var(--text-soft); font-size: var(--fs-body-lg); }
+.comparison-col li::before { content: ""; position: absolute; left: 0; top: .65em; width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.comparison-col.muted { opacity: .75; }
+.comparison-col.muted h3 { color: var(--text-soft); }
+.comparison-col.accent h3 { color: var(--accent); }
+.comparison-col.accent li { color: var(--text); }
+.comparison-col.accent li::before { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+/* Estatísticas */
+.stat-value {
+  white-space: nowrap;
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(48px, 6vw, 88px); line-height: 1;
+  color: var(--text);
+}
+.stat-card .stat-value { color: var(--accent); }
+.stat-label { color: var(--text-soft); margin-top: 12px; }
+.hero-stat .slide-inner { align-items: center; text-align: center; }
+.hero-stat .stat-value { font-size: clamp(88px, 14vw, 200px); color: var(--accent); text-shadow: 0 0 60px rgba(40,194,196,.25); }
+.hero-stat .stat-label { color: var(--accent-2); margin: 0 0 12px; }
+.stat-note { font-size: var(--fs-body-lg); margin-top: 16px; }
+
+/* Etapas */
+.steps-list { list-style: none; display: grid; gap: clamp(10px, 1.8vh, 18px); }
+.step { display: grid; grid-template-columns: 64px 1fr; gap: 18px; align-items: start; padding: 14px 0; border-top: 1px solid var(--line); }
+.step-num { color: var(--accent); font-size: 15px; padding-top: 4px; }
+.step-copy h3 { margin-bottom: 4px; }
+
+/* Diagrama */
+.diagram { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: clamp(18px, 3vw, 40px); position: relative; }
+.diagram-node { position: relative; }
+.diagram-node:not(:last-child)::after {
+  content: ""; position: absolute; top: 50%; right: calc(-1 * clamp(18px, 3vw, 40px));
+  width: clamp(18px, 3vw, 40px); height: 1px;
+  background: linear-gradient(90deg, rgba(40,194,196,.6), rgba(40,194,196,.1));
+}
+.diagram-node h3 { margin-bottom: 6px; }
+
+/* Árvore */
+.tree { display: grid; gap: 16px; }
+.tree-node {
+  display: inline-block; padding: 10px 18px; border-radius: var(--r-sm);
+  background: var(--surface); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 15px;
+}
+.tree-node.root { border-color: rgba(40,194,196,.4); color: var(--accent); box-shadow: var(--shadow-glow); }
+.tree-children { display: grid; gap: 12px; padding-left: 36px; border-left: 1px solid rgba(40,194,196,.25); margin-left: 18px; }
+.tree-branch { display: flex; align-items: center; gap: 16px; }
+.tree-note { color: var(--text-soft); }
+
+/* Linha do tempo */
+.timeline { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 24px; position: relative; padding-top: 28px; }
+.timeline::before { content: ""; position: absolute; top: 7px; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, var(--accent), rgba(176,175,250,.3)); }
+.timeline-item { position: relative; }
+.timeline-dot { position: absolute; top: -28px; left: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--bg); border: 2px solid var(--accent); box-shadow: 0 0 12px var(--accent); }
+.timeline-copy .mono { color: var(--accent-2); margin-bottom: 8px; }
+.timeline-copy h3 { margin-bottom: 6px; }
+
+/* FAQ */
+.faq-list { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; }
+.faq-item h3 { color: var(--text); margin-bottom: 8px; }
+
+/* Hub */
+.hub-showcase { position: relative; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 40px; min-height: 0; flex: 1; max-height: 420px; }
+.hub-connections { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.pulsing-line { fill: none; stroke: rgba(40,194,196,.45); stroke-width: 1.5; stroke-dasharray: 6 8; animation: dash 2.4s linear infinite; }
+@keyframes dash { to { stroke-dashoffset: -28; } }
+.hub-col-side { display: grid; gap: clamp(24px, 6vh, 64px); position: relative; z-index: 1; justify-items: start; }
+.hub-col-side:last-of-type { justify-items: end; }
+.hub-small-node { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: var(--r-sm); background: var(--surface); border: 1px solid var(--line); }
+.hub-center-node {
+  position: relative; z-index: 1; display: grid; justify-items: center; gap: 8px;
+  padding: 28px 36px; border-radius: var(--r-card); background: var(--surface-2);
+  border: 1px solid rgba(40,194,196,.4); box-shadow: var(--shadow-glow);
+}
+.hub-center-badge { font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: .12em; }
+.hub-center-icon { font-size: 36px; }
+.hub-center-title { font-family: var(--font-display); font-weight: 700; font-size: 20px; }
+
+/* Screenshot */
+.screenshot-slide .slide-inner { justify-content: center; align-items: center; }
+.screenshot-frame {
+  border-radius: var(--r-frame); overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  min-height: 0; flex: 0 1 auto; max-height: 72vh; max-width: 100%;
+}
+.screenshot-frame img { display: block; max-width: 100%; max-height: 72vh; width: auto; height: auto; object-fit: contain; }
+.screenshot-caption { color: var(--text-soft); text-align: center; text-transform: none; letter-spacing: .02em; }
+
+/* CTA */
+.cta-row { display: flex; gap: 14px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; padding: 14px 28px; border-radius: 999px; font-weight: 600; text-decoration: none; font-size: var(--fs-body-lg); transition: transform .3s var(--ease), box-shadow .3s var(--ease); }
+.btn-primary { background: var(--accent); color: var(--on-accent); box-shadow: 0 0 30px rgba(40,194,196,.35); }
+.btn-secondary { border: 1px solid rgba(40,194,196,.4); color: var(--accent); }
+.btn:hover { transform: translateY(-2px); }
+
+/* ============ ANIMAÇÃO ============ */
+.animate { opacity: 0; transform: translateY(18px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+.slide.in-view .animate { opacity: 1; transform: none; }
+.delay-1 { transition-delay: .08s; }
+.delay-2 { transition-delay: .20s; }
+.delay-3 { transition-delay: .32s; }
+.delay-4 { transition-delay: .44s; }
+.delay-5 { transition-delay: .56s; }
+.delay-6 { transition-delay: .68s; }
+@media (prefers-reduced-motion: reduce) {
+  .animate { transition: none; opacity: 1; transform: none; }
+  .deck { scroll-behavior: auto; }
+  .pulsing-line { animation: none; }
+}
+
+/* ============ NAVEGAÇÃO POR PONTOS ============ */
+.dots {
+  position: fixed; right: 22px; top: 50%; transform: translateY(-50%);
+  display: grid; gap: 10px; z-index: 10;
+}
+.dots button {
+  width: 8px; height: 8px; border-radius: 999px; border: 0; padding: 0; cursor: pointer;
+  background: rgba(255,255,255,.22);
+  transition: height .35s var(--ease), background .35s var(--ease), box-shadow .35s var(--ease);
+}
+.dots button:hover { background: rgba(255,255,255,.5); }
+.dots button.active { height: 24px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+.dots button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; }
+
+.progress { position: fixed; left: 0; top: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); width: 0; z-index: 10; transition: width .4s var(--ease); }
+
+
+/* ============ NOTAS DO APRESENTADOR (tecla N) ============ */
+.notes { display: none; }
+.notes-panel {
+  position: fixed; left: 16px; right: 56px; bottom: 16px; z-index: 30;
+  max-height: 40vh; overflow-y: auto;
+  background: rgba(14,14,18,.94); color: #F2F2F5;
+  border: 1px solid rgba(255,255,255,.12); border-radius: 16px;
+  padding: 18px 24px 20px; box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  font: 16px/1.55 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  display: none;
+}
+.notes-on .notes-panel { display: block; }
+.notes-panel header { display: flex; justify-content: space-between; gap: 16px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; opacity: .65; margin-bottom: 10px; }
+.notes-panel ul { padding-left: 20px; margin: 6px 0 10px; }
+.notes-panel li { margin: 2px 0; }
+.notes-panel p { color: inherit; margin: 6px 0; }
+.notes-panel .tempo { color: #9FE3E4; }
+.notes-toggle {
+  position: fixed; left: 16px; bottom: 16px; z-index: 31;
+  font: 600 11px/1 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase;
+  padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(127,127,127,.35);
+  background: rgba(127,127,127,.12); color: inherit; cursor: pointer; opacity: .35;
+  transition: opacity .3s;
+}
+.notes-toggle:hover, .notes-on .notes-toggle { opacity: 1; }
+.notes-on .notes-toggle { bottom: auto; top: 16px; }
+
+/* ============ RESPONSIVO ============ */
+@media (max-width: 900px) {
+  .cols-3, .cols-4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .diagram, .timeline { grid-auto-flow: row; }
+  .diagram-node::after { display: none; }
+  .dots { right: 10px; }
+}
+@media (max-width: 600px) {
+  .cols-2, .cols-3, .cols-4, .comparison-grid, .faq-list { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress" aria-hidden="true"></div>
+
+<main class="deck" id="deck">
+
+  <!-- {{SLIDES}} : um <section class="slide ..."> por slide, na ordem -->
+
+</main>
+
+<nav class="dots" id="dots" aria-label="Navegação dos slides"></nav>
+<aside class="notes-panel" id="notesPanel" aria-live="polite"><header><span id="notesTitle">Notas</span><span>N para fechar</span></header><div id="notesBody"></div></aside>
+
+<script>
+(() => {
+  const deck = document.getElementById('deck');
+  const slides = [...deck.querySelectorAll('.slide')];
+  const dotsNav = document.getElementById('dots');
+  const progress = document.querySelector('.progress');
+  const total = slides.length;
+  const pad = n => String(n).padStart(2, '0');
+  let current = 0;
+
+  // Numeração automática: garante NN / TOTAL correto em todos os slides
+  slides.forEach((s, i) => {
+    let c = s.querySelector('.slide-counter');
+    if (!c) {
+      c = document.createElement('div');
+      c.className = 'slide-counter';
+      (s.querySelector('.slide-inner') || s).prepend(c);
+    }
+    c.textContent = `${pad(i + 1)} / ${pad(total)}`;
+    s.id = s.id || `slide-${i + 1}`;
+  });
+
+  // Pontos de navegação
+  const dots = slides.map((s, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-label', `Ir para o slide ${i + 1}`);
+    b.addEventListener('click', () => go(i));
+    dotsNav.appendChild(b);
+    return b;
+  });
+
+  // Notas do apresentador: <aside class="notes"> dentro de cada slide, painel com a tecla N
+  const notesPanel = document.getElementById('notesPanel');
+  const notesBody = document.getElementById('notesBody');
+  const notesTitle = document.getElementById('notesTitle');
+  const hasNotes = slides.some(s => s.querySelector('.notes'));
+  if (hasNotes) {
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'notes-toggle'; btn.textContent = 'Notas (N)';
+    btn.addEventListener('click', () => toggleNotes());
+    document.body.appendChild(btn);
+  }
+  function renderNotes() {
+    if (!notesPanel) return;
+    const n = slides[current] && slides[current].querySelector('.notes');
+    notesTitle.textContent = `Notas · Slide ${pad(current + 1)} / ${pad(total)}`;
+    notesBody.innerHTML = n ? n.innerHTML : '<p style="opacity:.6">Sem notas para este slide.</p>';
+  }
+  function toggleNotes(force) {
+    document.body.classList.toggle('notes-on', force);
+    renderNotes();
+  }
+
+  function setActive(i) {
+    current = i;
+    if (document.body.classList.contains('notes-on')) renderNotes();
+    dots.forEach((d, j) => {
+      d.classList.toggle('active', j === i);
+      d.setAttribute('aria-current', j === i ? 'true' : 'false');
+    });
+    progress.style.width = `${((i + 1) / total) * 100}%`;
+  }
+
+  function go(i) {
+    i = Math.max(0, Math.min(total - 1, i));
+    slides[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Slide ativo + disparo das animações
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting && e.intersectionRatio >= 0.55) {
+        e.target.classList.add('in-view');
+        setActive(slides.indexOf(e.target));
+      }
+    });
+  }, { root: deck, threshold: [0.55] });
+  slides.forEach(s => io.observe(s));
+
+  // Teclado
+  document.addEventListener('keydown', e => {
+    if (e.target.closest('input, textarea, [contenteditable]')) return;
+    const next = ['ArrowDown', 'ArrowRight', 'PageDown', ' '];
+    const prev = ['ArrowUp', 'ArrowLeft', 'PageUp'];
+    if (next.includes(e.key) && !e.shiftKey) { e.preventDefault(); go(current + 1); }
+    else if (prev.includes(e.key) || (e.key === ' ' && e.shiftKey)) { e.preventDefault(); go(current - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(total - 1); }
+    else if ((e.key === 'n' || e.key === 'N') && hasNotes) { e.preventDefault(); toggleNotes(); }
+    else if (e.key === 'Escape') { toggleNotes(false); }
+  });
+
+  // Hub: desenha as linhas do nó central até cada nó periférico (sempre alinhadas, em qualquer tela)
+  function drawHubs() {
+    document.querySelectorAll('.hub-showcase').forEach(hub => {
+      const svg = hub.querySelector('.hub-connections');
+      const center = hub.querySelector('.hub-center-node');
+      if (!svg || !center) return;
+      const hr = hub.getBoundingClientRect();
+      if (!hr.width) return;
+      svg.setAttribute('viewBox', `0 0 ${hr.width} ${hr.height}`);
+      svg.setAttribute('preserveAspectRatio', 'none');
+      const c = center.getBoundingClientRect();
+      const cx = c.left + c.width / 2 - hr.left, cy = c.top + c.height / 2 - hr.top;
+      svg.innerHTML = '';
+      hub.querySelectorAll('.hub-small-node').forEach(n => {
+        const r = n.getBoundingClientRect();
+        const left = r.left + r.width / 2 < c.left + c.width / 2;
+        const x = (left ? r.right : r.left) - hr.left, y = r.top + r.height / 2 - hr.top;
+        const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        l.setAttribute('x1', cx); l.setAttribute('y1', cy); l.setAttribute('x2', x); l.setAttribute('y2', y);
+        l.setAttribute('class', 'pulsing-line');
+        svg.appendChild(l);
+      });
+    });
+  }
+  window.addEventListener('resize', drawHubs);
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(drawHubs);
+  window.addEventListener('load', drawHubs);
+
+  // Métricas nunca quebram linha: reduz a fonte até caber na largura disponível
+  function fitStats() {
+    document.querySelectorAll('.stat-value').forEach(el => {
+      el.style.fontSize = '';
+      const box = el.parentElement;
+      const cs = getComputedStyle(box);
+      const avail = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      let size = parseFloat(getComputedStyle(el).fontSize);
+      while (el.scrollWidth > avail && size > 24) {
+        size -= 4;
+        el.style.fontSize = size + 'px';
+      }
+    });
+  }
+  window.addEventListener('resize', fitStats);
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(fitStats);
+  fitStats();
+
+  // Aviso de overflow no console (ajuda a verificar o encaixe em 100vh)
+  function checkOverflow() {
+    slides.forEach((s, i) => {
+      const inner = s.querySelector('.slide-inner') || s;
+      if (inner.scrollHeight > s.clientHeight + 2) {
+        console.warn(`[deck] Slide ${i + 1} transborda a viewport (${inner.scrollHeight}px > ${s.clientHeight}px). Divida o conteúdo.`);
+      }
+    });
+  }
+  document.fonts ? document.fonts.ready.then(checkOverflow) : window.addEventListener('load', checkOverflow);
+
+  setActive(0);
+  slides[0] && slides[0].classList.add('in-view');
+})();
+</script>
+</body>
+</html>
